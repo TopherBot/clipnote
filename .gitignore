@@ -1,0 +1,22 @@
+# Byte‑compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Build artefacts
+build/
+*.egg-info/
+.dist/
+
+# Virtual environments
+.env
+.venv
+venv/
+
+# IDE / editor folders
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
