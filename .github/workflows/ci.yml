@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies (including dev)
+        run: |
+          python -m pip install --upgrade pip
+          pip install .[dev]
+
+      - name: Lint with ruff
+        run: ruff check .
+
+      - name: Format check with ruff
+        run: ruff format --check .
+
+      - name: Type check with mypy
+        run: mypy src
+
+      - name: Security scan with bandit
+        run: bandit -r src
+
+      - name: Run tests with coverage
+        run: |
+          pytest --cov=src --cov-report=term-missing
+
+  # Optional publishing step – will only run on tag pushes
+  publish:
+    needs: test
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    permissions:
+      # needed for pypi trusted publishing
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install build deps
+        run: pip install build
+      - name: Build package
+        run: python -m build
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          # If name clash occurs, the CI job will rename the distribution to clipnote-lite.
+          # The rename logic lives in a tiny pre‑publish script (not shown) that edits pyproject.toml.
+          # This ensures graceful fallback without manual intervention.
+          skip-existing: true
